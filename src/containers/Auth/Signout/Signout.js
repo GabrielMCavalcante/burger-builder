@@ -1,4 +1,4 @@
-import React, { Component } from 'react'
+import React, { useEffect } from 'react'
 
 // React redirect
 import { Redirect } from 'react-router-dom'
@@ -9,10 +9,10 @@ import { connect } from 'react-redux'
 // Actions
 import { actions } from 'store/actions/auth'
 
-class Signout extends Component {
-    componentDidMount() { this.props.onSignout() }
-    
-    render() { return <Redirect to="/auth"/> }
+function Signout(props) {
+    useEffect(() => { props.onSignout() }, [])
+
+    return <Redirect to="/auth" />
 }
 
 function mapStateToProps(dispatch) {
