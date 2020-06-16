@@ -1,0 +1,44 @@
+@charset "UTF-8";
+.Input {
+    width: 100%;
+    padding: 10px;
+    box-sizing: border-box;
+}
+
+.Input label {
+    font-weight: bold;
+    color: #222;
+    display: block;
+    font-size: 0.8rem;
+    float: left;
+    margin-bottom: 8px;
+}
+
+.Input input, 
+.Input select {
+    width: 100%;
+    margin: auto;
+    outline: none;
+    border: 1px solid #ccc;
+    background-color: white;
+    font: inherit;
+    padding: 6px 10px;
+    box-sizing: border-box;
+}
+
+.Input input:focus, 
+.Input select:focus {
+    outline: none;
+    background-color: #eee;
+}
+
+.Input input.Invalid,
+.Input textarea.Invalid {
+    background-color: rgb(206, 9, 9);
+    color: white;
+}
+
+.Input input.Invalid::placeholder,
+.Input textarea.Invalid::placeholder {
+    color: #eee;
+}

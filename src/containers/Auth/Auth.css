@@ -1,0 +1,41 @@
+.Auth {
+    margin: auto;
+    width: 80%;
+    text-align: center;
+    box-shadow: 0 2px 3px #ccc;
+    border: 1px solid #eee;
+    padding: 15px;
+    box-sizing: border-box;
+}
+
+.Auth .Error {
+    color: red;
+    text-transform: uppercase;
+    animation: fade 10s forwards;
+}
+
+@keyframes fade {
+    0% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0;
+        display: none;
+    }
+    100% {
+        opacity: 0;
+        display: none;
+        height: 0;
+        width: 0;
+    }
+}
+
+@media (min-width: 600px) {
+    .Auth {
+        width: 800px;
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+    }
+}
