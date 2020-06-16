@@ -1,4 +1,4 @@
-import React, { Component, Suspense } from 'react'
+import React, { Suspense, useEffect } from 'react'
 import { Route, Redirect, Switch } from 'react-router-dom'
 
 // React<->Redux connection
@@ -13,56 +13,51 @@ import Auth from 'containers/Auth/Auth'
 import Signout from 'containers/Auth/Signout/Signout'
 import BurgerBuilder from './BurgerBuilder/BurgerBuilder'
 
-const Checkout = React.lazy(()=>import('containers/Checkout/Checkout'))
-const Orders = React.lazy(()=>import('containers/Orders/Orders'))
+const Checkout = React.lazy(() => import('containers/Checkout/Checkout'))
+const Orders = React.lazy(() => import('containers/Orders/Orders'))
 
-// import Checkout from 'containers/Checkout/Checkout'
-// import Orders from 'containers/Orders/Orders'
+function App(props) {
+  useEffect(() => props.onTryAutoSignin(), [])
 
-class App extends Component {
-  componentDidMount() { this.props.onTryAutoSignin() }
+  let routes = (
+    <Switch>
+      <Route path="/auth" component={Auth} />
+      <Route path="/home" component={BurgerBuilder} />
+      <Redirect to="/auth" />
+    </Switch>
+  )
 
-  render() {
+  if (props.isAuth) {
+    let redirect = null
 
-    let routes = (
+    if (props.redirectPath !== "/home")
+      redirect = <Redirect to={String(props.redirectPath)} />
+
+    routes = (
       <Switch>
-        <Route path="/auth" component={Auth} />
         <Route path="/home" component={BurgerBuilder} />
-        <Redirect to="/auth" />
+
+        <Route path="/signout" component={Signout} />
+
+        <Route path="/orders" render={() =>
+          <Suspense fallback={<p>Loading orders...</p>}> <Orders /> </Suspense>
+        } />
+
+        <Route path="/checkout" render={() =>
+          <Suspense fallback={<p>Loading checkout page...</p>}> <Checkout /> </Suspense>
+        } />
+
+        {redirect}
+
+        <Redirect to="/home" />
       </Switch>
     )
-
-    if (this.props.isAuth) {
-      let redirect = null
-      
-      if(this.props.redirectPath !== "/home")
-        redirect = <Redirect to={String(this.props.redirectPath)} />
-
-      routes = (
-        <Switch>
-          <Route path="/home" component={BurgerBuilder} />
-          
-          <Route path="/signout" component={Signout} />
-
-          <Route path="/orders" render={()=>
-            <Suspense fallback={<p>Loading orders...</p>}> <Orders /> </Suspense>
-          } />
-
-          <Route path="/checkout" render={()=>
-            <Suspense fallback={<p>Loading checkout page...</p>}> <Checkout /> </Suspense>
-          } />
-
-          { redirect }
-
-          <Redirect to="/home" />
-        </Switch>
-      )
-    }
-
-    return (
-      <Layout>{ routes }</Layout>
-    )
   }
+
+  return (
+    <Layout>{routes}</Layout>
+  )
+
 }
 
 function mapStateToProps(state) {
