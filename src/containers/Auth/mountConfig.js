@@ -1,4 +1,4 @@
-export default function mountConfig(context) {
+export default function mountConfig(inputHandler) {
     function generateFormStructure(
         configProps,
         value,
@@ -23,7 +23,7 @@ export default function mountConfig(context) {
             name: 'email',
             type: 'email',
             label: 'Your email',
-            onChange: e => context.inputChangedHandler(e, 'email'),
+            onChange: e => inputHandler(e, 'email'),
             placeholder: 'ex.: example@placeholder.com'
         }, '', undefined, undefined, {
             valid: false,
@@ -35,7 +35,7 @@ export default function mountConfig(context) {
             name: 'password',
             type: 'password',
             label: 'Your password',
-            onChange: e => context.inputChangedHandler(e, 'password'),
+            onChange: e => inputHandler(e, 'password'),
             placeholder: 'ex.: 123456789'
         }, '', undefined, undefined, {
             valid: false,
