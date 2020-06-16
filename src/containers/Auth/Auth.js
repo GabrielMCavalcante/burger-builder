@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useState, useReducer } from 'react'
 
 // Redux store connection
 import { connect } from 'react-redux'
@@ -23,9 +23,25 @@ import styles from './Auth.css'
 // Utility
 import { updateObject, formValidation } from 'shared/utility'
 
+function controlsReducer(currentControls, action) {
+    
+    function update(cControls, updated) {
+        return { ...cControls, [updated.config.name]: updated }
+    }
+
+    switch(action.type) {
+        case 'UPDATE': return update({...currentControls}, action.updatedControls)
+        default: throw new Error('Unknown action type: ' + action.type)
+    }
+}
+
 function Auth(props) {
 
-    const [controls, setControls] = useState(mountConfig(inputChangedHandler))
+    const [controls, dispatchControls] = useReducer(
+        controlsReducer,
+        mountConfig(inputChangedHandler)
+    )
+    
     const [isValid, setIsValid] = useState(false)
     const [formFields, setFormFields] = useState([])
     const [isSignup, setIsSignup] = useState(false)
@@ -47,8 +63,8 @@ function Auth(props) {
         })
 
         const formValidity = formValidation.checkFormValidity(updatedControls)
-
-        setControls(updatedControls)
+        
+        dispatchControls({type: 'UPDATE', updatedControls: updatedControls[identifier]})
         setIsValid(formValidity)
     }
 
