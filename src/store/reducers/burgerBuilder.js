@@ -9,6 +9,7 @@ const initialState = {
     ingredients: {},
     INGREDIENT_PRICE: {},
     totalPrice: 0,
+    tenPercPrice: 0,
     error: false,
     initializedValues: {
         ingredients: false,
@@ -36,6 +37,7 @@ function setIngredientPrice(state, action) {
 function setBasePrice(state, action) {
     return updateObject(state, {
         totalPrice: action.price,
+        tenPercPrice: action.price * 1.1,
         error: false,
         initializedValues: { ...state.initializedValues, totalPrice: true }
     })
@@ -48,8 +50,11 @@ function updateIngredients(state, action) {
 }
 
 function updatePrice(state, action) {
-    // console.log('INSIDE REDUCER: ', action)
-    return updateObject(state, { totalPrice: action.updatedPrice, error: false })
+    return updateObject(state, { 
+        totalPrice: action.updatedPrice, 
+        tenPercPrice: action.updatedPrice * 1.1,
+        error: false 
+    })
 }
 
 function resetInitializedValues(state) {
