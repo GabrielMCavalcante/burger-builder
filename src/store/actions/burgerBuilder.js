@@ -39,6 +39,10 @@ export const actions = {
             type: BURGERBUILDER_TYPES.UPDATE_PRICE,
             updatedPrice
         }
+    },
+
+    resetInitializedValues() {
+        return {type: BURGERBUILDER_TYPES.RESET_INITIALIZEDVALUES}
     }
 }
 
@@ -70,6 +74,12 @@ export default {
     updateTotalPrice(updatedPrice) {
         return function(dispatch) {
             dispatch(actions.updateTotalPrice(updatedPrice))
+        }
+    },
+
+    resetInitializedValues() {
+        return function(dispatch) {
+            dispatch(actions.resetInitializedValues())
         }
     }
 }
