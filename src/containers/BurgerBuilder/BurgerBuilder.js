@@ -148,17 +148,16 @@ export function BurgerBuilder(props) {
 
     return (
         <Fragment>
-            {redirectToSignin && <Redirect to="/auth" />}
+            { redirectToSignin && <Redirect to="/auth" /> }
 
             <Modal
-                loading={loading}
                 show={purchasing}
                 backdrop={() => setPurchasing(false)}
-            >{orderSummary}</Modal>
+            >{ orderSummary }</Modal>
 
-            {burger}
+            { burger }
 
-            {buildControls}
+            { buildControls }
 
         </Fragment>
     )
