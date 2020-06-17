@@ -1,65 +1,52 @@
-import React, { Component, Fragment } from 'react'
+import React, { useState, useEffect, Fragment } from 'react'
 
 // Components
 import Modal from 'components/UI/Modal/Modal'
 
 function withErrorHandler(WrappedComponent, axios) {
-    return class extends Component {
+    return function (props) {
 
-        constructor(props) {
-            super(props)
-            
-            this.state = {
-                error: null
+        const [error, setError] = useState(null)
+
+        const reqInterceptor = axios.interceptors.request.use(request => {
+            setError(null)
+            return request
+        })
+
+        const resInterceptor = axios.interceptors.response.use(
+            response => response,
+            err => setError(err)
+        )
+
+        useEffect(() => {
+            return () => {
+                axios.interceptors.request.eject(reqInterceptor)
+                axios.interceptors.response.eject(resInterceptor)
+            }
+        }, [reqInterceptor, resInterceptor])
+
+        let errorMessage = null
+        if (error) {
+            switch (error.response.data.error) {
+                case 'Permission denied':
+                case 'Could not parse auth token.':
+                    {
+                        errorMessage = 'Only authenticated users can access this feature.'
+                        break
+                    }
+                default: errorMessage = 'An unknown error occured.'
             }
         }
 
-        componentDidMount() {
-            this.reqInterceptor = axios.interceptors.request.use(request => {
-                this.setState({ error: null })
-                return request
-            })
-
-            this.resInterceptor = axios.interceptors.response.use(
-                response => response, 
-                err => this.setState({ error: err })
-            )
-        }
-
-        componentWillUnmount() {
-            axios.interceptors.request.eject(this.reqInterceptor)
-            axios.interceptors.response.eject(this.resInterceptor)
-        }
-
-        errorConfirmedHandler() {
-            this.setState({ error: null })
-        }
-
-        render() {
-            
-            let errorMessage = null
-            if(this.state.error) {
-                switch(this.state.error.response.data.error) {
-                    case 'Permission denied':
-                    case 'Could not parse auth token.':
-                        {
-                            errorMessage = 'Only authenticated users can access this feature.'
-                            break
-                        }
-                    default: errorMessage = 'An unknown error occured.'
-                }
-            }
-
-            return (
-                <Fragment>
-                    <Modal 
-                        show={this.state.error} 
-                        backdrop={this.errorConfirmedHandler.bind(this)}
-                    >{this.state.error ? errorMessage : null}</Modal>
-                    <WrappedComponent {...this.props}></WrappedComponent>
-                </Fragment>
-            )
-        }
+        return (
+            <Fragment>
+                <Modal
+                    show={error}
+                    backdrop={() => setError(null)}
+                >{error ? errorMessage : null}</Modal>
+                <WrappedComponent {...props}></WrappedComponent>
+            </Fragment>
+        )
     }
 }
 
