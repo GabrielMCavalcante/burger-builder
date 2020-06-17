@@ -1,6 +1,6 @@
 import React, { Fragment } from 'react';
 
-export default function mountConfig(hostThis) {
+export default function mountConfig(inputHandler) {
     function generateFormStructure(
         configProps,
         value,
@@ -24,7 +24,7 @@ export default function mountConfig(hostThis) {
             required: true,
             name: 'name',
             label: 'Your name',
-            onChange: e => hostThis.inputChangedHandler(e, 'name'),
+            onChange: e => inputHandler(e, 'name'),
             placeholder: 'ex.: Gabriel Melo'
         }, '',undefined, undefined, {
             valid: false,
@@ -37,7 +37,7 @@ export default function mountConfig(hostThis) {
             name: 'email',
             type: 'email',
             label: 'Your email',
-            onChange: e => hostThis.inputChangedHandler(e, 'email'),
+            onChange: e => inputHandler(e, 'email'),
             placeholder: 'ex.: example@placeholder.com'
         }, '',undefined, undefined, {
             valid: false,
@@ -49,7 +49,7 @@ export default function mountConfig(hostThis) {
             required: true,
             name: 'street',
             label: 'Your street',
-            onChange: e => hostThis.inputChangedHandler(e, 'street'),
+            onChange: e => inputHandler(e, 'street'),
             placeholder: 'ex.: 7th Street, Main Avenue'
         }, '',undefined, undefined, {
             valid: false,
@@ -59,9 +59,9 @@ export default function mountConfig(hostThis) {
         }),
         zipCode: generateFormStructure({
             required: true,
-            name: 'zipcode',
+            name: 'zipCode',
             label: 'Your zip code',
-            onChange: e => hostThis.inputChangedHandler(e, 'zipCode'),
+            onChange: e => inputHandler(e, 'zipCode'),
             placeholder: 'ex.: 12345678'
         }, '',undefined, undefined, {
             valid: false,
@@ -73,7 +73,7 @@ export default function mountConfig(hostThis) {
             required: true,
             name: 'country',
             label: 'Your country',
-            onChange: e => hostThis.inputChangedHandler(e, 'country'),
+            onChange: e => inputHandler(e, 'country'),
             placeholder: 'ex.: Brazil'
         }, '', undefined, undefined, {
             valid: false,
@@ -83,7 +83,7 @@ export default function mountConfig(hostThis) {
         deliveryMethod: generateFormStructure({
             name: 'deliveryMethod',
             label: 'Choose a delivery method',
-            onChange: e => hostThis.inputChangedHandler(e, 'deliveryMethod'),
+            onChange: e => inputHandler(e, 'deliveryMethod'),
             defaultValue: 'normal'
         }, 'normal','select', (
             <Fragment>
