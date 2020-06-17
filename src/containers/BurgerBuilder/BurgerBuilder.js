@@ -1,4 +1,4 @@
-import React, { Component, Fragment } from 'react'
+import React, { useEffect, useState, Fragment } from 'react'
 
 // React redirect
 import { Redirect } from 'react-router-dom'
@@ -25,148 +25,146 @@ import Spinner from 'components/UI/Spinner/Spinner'
 // Axios instance
 import axios from 'axios-orders'
 
-export class BurgerBuilder extends Component {
+export function BurgerBuilder(props) {
 
-    state = {
-        purchasing: false,
-        loading: false,
-        redirectToSignin: false
-    }
+    const [purchasing, setPurchasing] = useState(false)
+    const [loading, setLoading] = useState(false)
+    const [redirectToSignin, setRedirectToSignin] = useState(false)
 
-    componentDidMount() {
-        this.props.onRedirect("/home")
-        this.props.onInitIngredientPrice()
-        this.props.onInitBasePrice()
-        this.props.onInitIngredients()
+    useEffect(() => {
+        setLoading(true)
+        props.onRedirect("/home")
+        props.onInitIngredientPrice()
+        props.onInitBasePrice()
+        props.onInitIngredients()
+    }, [])
 
-        setTimeout(() => {
-            Object.keys(this.props.ings).forEach(ingredient =>
-                this.updatePriceHandler(ingredient, 1, this.props.ings[ingredient])
-            )
-        }, 1000)
-    }
+    useEffect(() => {
+        const iniValues = Object.keys(props.initializedValues)
+        let valid = true
+        iniValues.forEach(value => {
+            if (valid)
+                valid = props.initializedValues[value]
+        })
+        if (valid) {
+            setLoading(false)
+            Object.keys(props.ings).forEach(ingredient => {
+                updatePriceHandler(ingredient, 1, props.ings[ingredient])
+            })
+        }
+    }, [props.initializedValues])
 
-    updatePriceHandler(ingredientName, fix, ingredientQtd = 1) {
-        this.props.onUpdateTotalPrice(
-            this.props.totPrice + (fix * (
-                this.props.INGREDIENT_PRICE[ingredientName] * ingredientQtd
+    function updatePriceHandler(ingredientName, fix, ingredientQtd = 1) {
+        props.onUpdateTotalPrice(
+            props.totalPrice + (fix * (
+                props.INGREDIENT_PRICE[ingredientName] * ingredientQtd
             ))
         )
     }
 
-    addIngredientHandler(type) {
-        const oldCount = this.props.ings[type]
+    function addIngredientHandler(type) {
+        const oldCount = props.ings[type]
         const updatedCount = oldCount + 1
 
-        const updatedIngredients = { ...this.props.ings }
+        const updatedIngredients = { ...props.ings }
         updatedIngredients[type] = updatedCount
 
-        this.props.onUpdateIngredients(updatedIngredients)
+        props.onUpdateIngredients(updatedIngredients)
 
-        this.updatePriceHandler(type, 1)
+        updatePriceHandler(type, 1)
     }
 
-    removeIngredientHandler(type) {
-        if (this.props.ings[type] > 0) {
-            const oldCount = this.props.ings[type]
+    function removeIngredientHandler(type) {
+        if (props.ings[type] > 0) {
+            const oldCount = props.ings[type]
 
             const updatedCount = oldCount - 1
 
-            const updatedIngredients = { ...this.props.ings }
+            const updatedIngredients = { ...props.ings }
             updatedIngredients[type] = updatedCount
 
-            this.props.onUpdateIngredients(updatedIngredients)
+            props.onUpdateIngredients(updatedIngredients)
 
-            this.updatePriceHandler(type, -1)
+            updatePriceHandler(type, -1)
         }
     }
 
-    backdropClickHandler() {
-        this.setState({ purchasing: false })
+    function calcTotIngredients() {
+        return Object.values(props.ings).reduce((sum, val) => sum + val, 0)
     }
 
-    purchaseHandler() {
-        this.setState({ purchasing: true })
+    function onRedirectToSignin() {
+        setRedirectToSignin(true)
+        props.onRedirect("/checkout")
     }
 
-    calcTotIngredients() {
-        return Object.values(this.props.ings).reduce((sum, val) => sum + val, 0)
-    }
+    const disabledInfo = { ...props.ings }
 
-    redirectToSignin() {
-        this.setState({ redirectToSignin: true })
-        this.props.onRedirect("/checkout")
-    }
+    for (const key in disabledInfo) disabledInfo[key] = disabledInfo[key] <= 0
 
-    render() {
-        
-        const disabledInfo = { ...this.props.ings }
+    let orderSummary = (
+        <OrderSummary
+            purchaseCanceled={() => setPurchasing(false)}
+        ></OrderSummary>
+    )
 
-        for (const key in disabledInfo) disabledInfo[key] = disabledInfo[key] <= 0
+    let burger = <Burger></Burger>
 
-        let orderSummary = (
-            <OrderSummary
-                purchaseCanceled={this.backdropClickHandler.bind(this)}
-            ></OrderSummary>
+    let buildControls = (
+        <BuildControls
+            isAuthenticated={props.isAuthenticated}
+            added={addIngredientHandler}
+            removed={removeIngredientHandler}
+            disabled={disabledInfo}
+            showPrice={props.totalPrice !== 0}
+            order={calcTotIngredients}
+            signin={onRedirectToSignin}
+            purchase={() => setPurchasing(true)}
+        ></BuildControls>
+    )
+
+    if (loading)
+        burger = <Spinner>Loading...</Spinner>
+
+    if (!props.ings)
+        orderSummary = burger = <Spinner>Loading...</Spinner>
+
+    if (props.error) {
+        burger = (
+            <p style={{ textAlign: 'center' }}>
+                An error ocurred: <strong style={{ color: 'red' }}>
+                    {props.error.message}
+                </strong> <br /> Try reloading the page.
+            </p>
         )
-
-        let burger = <Burger></Burger> 
-
-        let buildControls = (
-            <BuildControls
-                isAuthenticated={this.props.isAuthenticated}
-                added={this.addIngredientHandler.bind(this)}
-                removed={this.removeIngredientHandler.bind(this)}
-                disabled={disabledInfo}
-                showPrice={this.props.totPrice !== 4}
-                order={this.calcTotIngredients.bind(this)}
-                signin={this.redirectToSignin.bind(this)}
-                purchase={this.purchaseHandler.bind(this)}
-            ></BuildControls>
-        )
-
-        if (this.state.loading)
-            burger = <Spinner>Loading...</Spinner>
-
-        if (!this.props.ings)
-            orderSummary = burger = <Spinner>Loading...</Spinner>
-
-        if (this.props.error) {
-            burger = (
-                <p style={{ textAlign: 'center' }}>
-                    An error ocurred: <strong style={{ color: 'red' }}>
-                        {this.props.error.message}
-                    </strong> <br /> Try reloading the page.
-                </p>
-            )
-            buildControls = null
-        }
-
-        return (
-            <Fragment>
-                { this.state.redirectToSignin && <Redirect to="/auth" /> }
-                
-                <Modal
-                    loading={this.state.loading}
-                    show={this.state.purchasing}
-                    backdrop={this.backdropClickHandler.bind(this)}
-                >{ orderSummary }</Modal>
-
-                { burger }
-
-                { buildControls }
-
-            </Fragment>
-        )
+        buildControls = null
     }
+
+    return (
+        <Fragment>
+            {redirectToSignin && <Redirect to="/auth" />}
+
+            <Modal
+                loading={loading}
+                show={purchasing}
+                backdrop={() => setPurchasing(false)}
+            >{orderSummary}</Modal>
+
+            {burger}
+
+            {buildControls}
+
+        </Fragment>
+    )
 }
 
 function mapStateToProps(state) {
     return {
         ings: state.burgerBuilder.ingredients,
-        totPrice: state.burgerBuilder.totalPrice,
+        totalPrice: state.burgerBuilder.totalPrice,
         INGREDIENT_PRICE: state.burgerBuilder.INGREDIENT_PRICE,
         error: state.burgerBuilder.error,
+        initializedValues: state.burgerBuilder.initializedValues,
         isAuthenticated: state.auth.isAuthenticated
     }
 }
