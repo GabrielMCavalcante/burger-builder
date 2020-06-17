@@ -1,4 +1,4 @@
-import React, { Component } from 'react'
+import React, { useEffect, useState, useReducer } from 'react'
 
 // React router
 import { Redirect } from 'react-router-dom'
@@ -29,54 +29,68 @@ import axios from 'axios-orders'
 // Utility
 import { updateObject, formValidation } from 'shared/utility'
 
-class ContactData extends Component {
-
-    state = {
-        orderForm: mountConfig(this),
-        formInputs: [],
-        isValid: false,
-        finalPrice: 0
+function orderFormReducer(currentOrderForm, action) {
+    function update(cOrderForm, updated) {
+        return { ...cOrderForm, [updated.config.name]: updated }
     }
 
-    inputChangedHandler(event, identifier) {
-        const updatedOrderFormEl = updateObject(this.state.orderForm[identifier], {
+    switch (action.type) {
+        case 'UPDATE': return update({ ...currentOrderForm }, action.updatedOrderForm)
+        default: throw new Error('Unknown action type: ' + action.type)
+    }
+}
+
+function ContactData(props) {
+
+    const [orderForm, dispatchOrderForm] = useReducer(
+        orderFormReducer,
+        mountConfig(inputChangedHandler)
+    )
+
+    const [formInputs, setFormInputs] = useState([])
+    const [isValid, setIsValid] = useState(false)
+    const [finalPrice, setFinalPrice] = useState(0)
+
+    function inputChangedHandler(event, identifier) {
+        const updatedOrderFormEl = updateObject(orderForm[identifier], {
             value: event.target.value,
             touched: true
         })
 
         updatedOrderFormEl.validation.valid =
-        formValidation.checkValidity(
+            formValidation.checkValidity(
                 updatedOrderFormEl.value,
                 updatedOrderFormEl.validation
             )
 
-        const updatedOrderForm = updateObject(this.state.orderForm, {
+        const updatedOrderForm = updateObject(orderForm, {
             [identifier]: updatedOrderFormEl
         })
 
         const formValidity = formValidation.checkFormValidity(updatedOrderForm)
 
-        let updatedFinalPrice = this.state.finalPrice
-
         if (identifier === 'deliveryMethod') {
+            let updatedFinalPrice
             if (event.target.value === 'express')
-                updatedFinalPrice *= 1.1
+                updatedFinalPrice = props.tenPercPrice
             else if (event.target.value === 'normal')
-                updatedFinalPrice /= 1.1
+                updatedFinalPrice = props.totPrice
+            setFinalPrice(updatedFinalPrice)
         }
 
-        this.setState({
-            orderForm: updatedOrderForm,
-            isValid: formValidity,
-            finalPrice: updatedFinalPrice
+        dispatchOrderForm({ 
+            type: 'UPDATE', 
+            updatedOrderForm: updatedOrderForm[identifier] 
         })
+        
+        setIsValid(formValidity)
     }
 
-    componentDidMount() {
+    useEffect(() => {
         const inputs = []
-        const formFields = this.state.orderForm
+        const formFields = orderForm
 
-        this.setState({ finalPrice: this.props.totPrice })
+        setFinalPrice(props.totPrice)
 
         for (const field in formFields) {
             inputs.push(
@@ -89,78 +103,77 @@ class ContactData extends Component {
             )
         }
 
-        this.setState({ formInputs: inputs })
-    }
+        setFormInputs(inputs)
+    }, [])
 
-    submitOrderHandler(event) {
+    function submitOrderHandler(event) {
         event.preventDefault()
 
         const newOrder = {
-            ingredients: this.props.ings,
-            price: parseFloat(this.state.finalPrice.toFixed(2)),
+            ingredients: props.ings,
+            price: parseFloat(finalPrice.toFixed(2)),
             customer: {
-                name: this.state.orderForm.name.value,
-                street: this.state.orderForm.street.value,
-                zipCode: this.state.orderForm.zipCode.value,
-                country: this.state.orderForm.country.value,
-                email: this.state.orderForm.email.value
+                name: orderForm.name.value,
+                street: orderForm.street.value,
+                zipCode: orderForm.zipCode.value,
+                country: orderForm.country.value,
+                email: orderForm.email.value
             },
-            userToken: this.props.userToken,
-            deliveryMethod: this.state.orderForm.deliveryMethod.value
+            userToken: props.userToken,
+            deliveryMethod: orderForm.deliveryMethod.value
         }
 
-        this.props.onOrderBurger(newOrder, this.props.token)
+        props.onOrderBurger(newOrder, props.token)
     }
 
-    render() {
-        let form = (
-            <form onSubmit={e => this.submitOrderHandler(e)}>
-                {this.state.formInputs.map(input => {
-                    let invalid = false
-                    if (this.state.orderForm[input.field].touched) {
-                        if (!this.state.orderForm[input.field].validation.valid)
-                            invalid = true
-                    }
-                    return <Input
-                        key={input.field}
-                        type={input.type}
-                        children={input.children}
-                        config={input.config}
-                        invalid={invalid}
-                    />
-                })}
-                <p>Final Price: <strong>{new Intl.NumberFormat(
-                    'en-US', { style: 'currency', currency: 'USD' }
-                ).format(this.state.finalPrice)}</strong>
-                </p>
-                <Button
-                    disabled={!this.state.isValid}
-                    btnType='submit'
-                    type='Success'
-                >Order</Button>
-            </form>
-        )
+    let form = (
+        <form onSubmit={e => submitOrderHandler(e)}>
+            {formInputs.map(input => {
+                let invalid = false
+                if (orderForm[input.field].touched) {
+                    if (!orderForm[input.field].validation.valid)
+                        invalid = true
+                }
+                return <Input
+                    key={input.field}
+                    type={input.type}
+                    children={input.children}
+                    config={input.config}
+                    invalid={invalid}
+                />
+            })}
+            <p>Final Price: <strong>{new Intl.NumberFormat(
+                'en-US', { style: 'currency', currency: 'USD' }
+            ).format(finalPrice)}</strong>
+            </p>
+            <Button
+                disabled={!isValid}
+                btnType='submit'
+                type='Success'
+            >Order</Button>
+        </form>
+    )
 
-        if (this.props.loading) form = <Spinner></Spinner>
+    if (props.loading) form = <Spinner></Spinner>
 
-        if (this.props.purchased) {
-            this.props.onResetPurchased()
-            form = <Redirect to='/' />
-        }
-
-        return (
-            <div className={styles.ContactData}>
-                <h4>Enter your Contact Data</h4>
-                {form}
-            </div>
-        )
+    if (props.purchased) {
+        props.onResetPurchased()
+        form = <Redirect to='/' />
     }
+
+    return (
+        <div className={styles.ContactData}>
+            <h4>Enter your Contact Data</h4>
+            {form}
+        </div>
+    )
 }
 
 function mapStateToProps(state) {
     return {
         ings: state.burgerBuilder.ingredients,
         totPrice: state.burgerBuilder.totalPrice,
+        tenPercPrice: state.burgerBuilder.tenPercPrice,
         loading: state.order.loading,
         purchased: state.order.purchased,
         token: state.auth.token,
