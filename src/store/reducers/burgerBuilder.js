@@ -9,19 +9,36 @@ const initialState = {
     ingredients: {},
     INGREDIENT_PRICE: {},
     totalPrice: 0,
-    error: false
+    error: false,
+    initializedValues: {
+        ingredients: false,
+        INGREDIENT_PRICE: false,
+        totalPrice: false
+    }
 }
 
 function setIngredients(state, action) {
-    return updateObject(state, { ingredients: action.ingredients, error: false })
+    return updateObject(state, {
+        ingredients: action.ingredients,
+        error: false,
+        initializedValues: { ...state.initializedValues, ingredients: true }
+    })
 }
 
 function setIngredientPrice(state, action) {
-    return updateObject(state, { INGREDIENT_PRICE: action.prices, error: false })
+    return updateObject(state, {
+        INGREDIENT_PRICE: action.prices,
+        error: false,
+        initializedValues: { ...state.initializedValues, INGREDIENT_PRICE: true }
+    })
 }
 
 function setBasePrice(state, action) {
-    return updateObject(state, { totalPrice: action.price, error: false })
+    return updateObject(state, { 
+        totalPrice: action.price, 
+        error: false,
+        initializedValues: { ...state.initializedValues, totalPrice: true } 
+    })
 }
 
 function updateIngredients(state, action) {
@@ -31,6 +48,7 @@ function updateIngredients(state, action) {
 }
 
 function updatePrice(state, action) {
+    // console.log('INSIDE REDUCER: ', action)
     return updateObject(state, { totalPrice: action.updatedPrice, error: false })
 }
 
@@ -56,10 +74,10 @@ function burgerBuilderReducer(state = initialState, action) {
         case BURGERBUILDER_TYPES.UPDATE_PRICE:
             return updatePrice(state, action)
 
-        case STATUS_TYPES.ERROR: 
+        case STATUS_TYPES.ERROR:
             return error(state, action)
-            
-        default: 
+
+        default:
             return state
     }
 }
