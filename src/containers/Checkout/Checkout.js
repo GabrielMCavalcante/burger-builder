@@ -1,4 +1,4 @@
-import React, { Component } from 'react'
+import React, { useEffect } from 'react'
 
 // React router
 import { Route, Redirect, withRouter } from 'react-router-dom'
@@ -12,37 +12,27 @@ import actions from 'store/actions/auth'
 import CheckoutSummary from 'components/Order/CheckoutSummary/CheckoutSummary'
 import ContactData from 'containers/Checkout/ContactData/ContactData'
 
-class Checkout extends Component {
+function Checkout(props) {
 
-    componentDidMount() { this.props.onRedirect("/home") }
+    useEffect(() => props.onRedirect("/home"), [])
 
-    checkoutCanceledHandler() {
-        this.props.history.goBack()
-    }
+    let checkoutContent = (
+        <div>
+            <CheckoutSummary
+                canceled={() => props.history.goBack()}
+                continued={() => props.history.replace('/checkout/contact-data')}
+            ></CheckoutSummary>
+            <Route
+                path={props.match.path + '/contact-data'}
+                component={ContactData}
+            />
+        </div>
+    )
 
-    checkoutContinuedHandler() {
-        this.props.history.replace('/checkout/contact-data')
-    }
+    if (Object.keys(props.ings).length === 0)
+        checkoutContent = <Redirect to='/' />
 
-    render() {
-        let checkoutContent = (
-            <div>
-                <CheckoutSummary 
-                    canceled={this.checkoutCanceledHandler.bind(this)}
-                    continued={this.checkoutContinuedHandler.bind(this)}
-                ></CheckoutSummary>
-                <Route 
-                    path={this.props.match.path + '/contact-data'} 
-                    component={ContactData}
-                />
-            </div>
-        )
-
-        if(Object.keys(this.props.ings).length === 0) 
-            checkoutContent = <Redirect to='/' />
-
-        return checkoutContent
-    }
+    return checkoutContent
 }
 
 function mapStateToProps(state) {
