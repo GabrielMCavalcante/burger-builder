@@ -25,14 +25,19 @@ import Spinner from 'components/UI/Spinner/Spinner'
 // Axios instance
 import axios from 'axios-orders'
 
+let oldPrice = 0
 export function BurgerBuilder(props) {
-
+    
     const [purchasing, setPurchasing] = useState(false)
     const [loading, setLoading] = useState(false)
     const [redirectToSignin, setRedirectToSignin] = useState(false)
+    const [valid, setValid] = useState(false)
 
     useEffect(() => {
         setLoading(true)
+        setValid(false)
+        oldPrice = 0
+        props.onResetInitializedValues()
         props.onRedirect("/home")
         props.onInitIngredientPrice()
         props.onInitBasePrice()
@@ -47,7 +52,9 @@ export function BurgerBuilder(props) {
                 valid = props.initializedValues[value]
         })
         if (valid) {
+            setValid(true)
             setLoading(false)
+            oldPrice = props.totalPrice
             Object.keys(props.ings).forEach(ingredient => {
                 updatePriceHandler(ingredient, 1, props.ings[ingredient])
             })
@@ -55,11 +62,10 @@ export function BurgerBuilder(props) {
     }, [props.initializedValues])
 
     function updatePriceHandler(ingredientName, fix, ingredientQtd = 1) {
-        props.onUpdateTotalPrice(
-            props.totalPrice + (fix * (
-                props.INGREDIENT_PRICE[ingredientName] * ingredientQtd
-            ))
-        )
+        oldPrice = oldPrice + (fix * (
+            props.INGREDIENT_PRICE[ingredientName] * ingredientQtd
+        ))
+        props.onUpdateTotalPrice(oldPrice)
     }
 
     function addIngredientHandler(type) {
@@ -116,7 +122,7 @@ export function BurgerBuilder(props) {
             added={addIngredientHandler}
             removed={removeIngredientHandler}
             disabled={disabledInfo}
-            showPrice={props.totalPrice !== 0}
+            showPrice={valid}
             order={calcTotIngredients}
             signin={onRedirectToSignin}
             purchase={() => setPurchasing(true)}
@@ -183,6 +189,10 @@ function mapDispatchToProps(dispatch) {
 
         onUpdateTotalPrice(updatedPrice) {
             dispatch(actions.updateTotalPrice(updatedPrice))
+        },
+
+        onResetInitializedValues() {
+            dispatch(actions.resetInitializedValues())
         },
 
         onRedirect(redirectPath) {
